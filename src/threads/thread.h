@@ -86,10 +86,19 @@ struct thread
     tid_t tid;                          /* Thread identifier. */
     enum thread_status status;          /* Thread state. */
     char name[16];                      /* Name (for debugging purposes). */
+    /*Codigo modificado*/
+    
+    int64_t sleep_ticks;		/* Tempo q a thread esta dormindo, medido em ticks */
+    int64_t sleep_start;		/* Momento em q a thread comeca a dormir */
+    bool is_sleeping;			/* Se estiver true, entao a thread esta dormindo. */
+
+    /*Codigo modificado*/
     uint8_t *stack;                     /* Saved stack pointer. */
     int priority;                       /* Priority. */
     struct list_elem allelem;           /* List element for all threads list. */
-
+    
+    
+    int64_t ticks_blocked; /*Ticks que a thread bloqueará*/
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
@@ -106,6 +115,9 @@ struct thread
    If true, use multi-level feedback queue scheduler.
    Controlled by kernel command-line option "-o mlfqs". */
 extern bool thread_mlfqs;
+
+/*Inserir verifThread*/
+//void verifThread(struct thread *t, void *aux UNUSED);
 
 void thread_init (void);
 void thread_start (void);
@@ -129,6 +141,8 @@ void thread_yield (void);
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);
+
+void check_sleeping_threads(struct thread *t , void *aux);
 
 int thread_get_priority (void);
 void thread_set_priority (int);

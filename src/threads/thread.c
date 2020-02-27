@@ -71,6 +71,7 @@ static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
 
+
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
    general and it is possible in this case only because loader.S
@@ -123,7 +124,10 @@ void
 thread_tick (void) 
 {
   struct thread *t = thread_current ();
-
+  /*Codigo modificado*/
+  thread_foreach(check_sleeping_threads, NULL);
+  /*Codigo modificado*/
+ 
   /* Update statistics. */
   if (t == idle_thread)
     idle_ticks++;
@@ -464,6 +468,14 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
 
+  /*Codigo modificado*/
+
+  t->sleep_start = 0;
+  t->sleep_ticks = 0;
+  t->is_sleeping = false;
+
+  /*Codigo modificado*/
+
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
@@ -582,3 +594,19 @@ allocate_tid (void)
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
+
+/*Codigo modificado*/
+
+/* Acorda as threads que estao dormindo, mas que o tempo de dormir foi expirado */
+
+void check_sleeping_threads(struct thread *t, void *aux UNUSED)
+{
+   int64_t tick_elapsed = timer_elapsed (t->sleep_start);
+   if (t->is_sleeping == true && tick_elapsed >= t->sleep_ticks)
+   {
+      thread_unblock(t); //thread desbloqueada atraves da condicao acima
+      t->is_sleeping = false;
+      t->sleep_ticks = t->sleep_start = 0;
+   }
+}
+/*Codigo modificado*/

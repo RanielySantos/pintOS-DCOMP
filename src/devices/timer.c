@@ -89,11 +89,35 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks) 
 {
-  int64_t start = timer_ticks ();
+
+  /*Código modificado*/
+
+  int64_t start = timer_ticks();
+  struct thread *sleeping_thread = thread_current();
 
   ASSERT (intr_get_level () == INTR_ON);
-  while (timer_elapsed (start) < ticks) 
-    thread_yield ();
+
+  intr_set_level (INTR_OFF);
+  /* Interrupcao desligada para fazer o procedimento de colocar a thread
+     atual para dormir e manter ela no estado "Bloqueado" até que ela acorde.
+ */
+  sleeping_thread->sleep_start = start;
+  sleeping_thread->sleep_ticks = ticks;
+  sleeping_thread->is_sleeping = true;
+
+  thread_block();
+
+  /* procedimento ja foi realizado, entao liga-se a interrupcao novamente */
+  intr_set_level(INTR_ON); 
+
+  /*Codigo modificado*/
+ 
+  /*
+  int64_t start = timer_ticks();
+  ASSERT (intr_get_level () == INTR_ON);
+  while (timer_elapsed(start) < ticks)
+     thread_yield();
+  */
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -170,6 +194,7 @@ timer_print_stats (void)
 static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
+  
   ticks++;
   thread_tick ();
 }
